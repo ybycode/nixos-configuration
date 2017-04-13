@@ -29,14 +29,15 @@ with builtins; with pkgs.lib; {
     }
   '';
 
-  # Disable the first intel sound card.
-  boot.extraModprobeConfig = ''
-    options snd_hda_intel enable=0,1
-  '';
-
-  networking.hostName = "darkstar"; # Define your hostname.
-  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
-  networking.networkmanager.enable = true;
+  networking = {
+    hostName = "darkstar"; # Define your hostname.
+    # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
+    networkmanager.enable = true;
+    extraHosts = ''
+      172.17.0.1 docker
+      127.0.0.1 dev-local.com
+    '';
+  };
 
   # Select internationalisation properties.
   i18n = {

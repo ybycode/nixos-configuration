@@ -231,6 +231,19 @@ with builtins; with pkgs.lib; {
             drivers = [ pkgs.epson-escpr ];
       };
 
+      # Udev rules.
+      udev.extraRules = ''
+          # Add access to the webcam for the group users:
+          SUBSYSTEM=="usb", ATTR{idVendor}=="04ca" MODE="0664", GROUP="users"
+          # 05c6 is Qualcomm, to allow debugging on the One Plus:
+          SUBSYSTEM=="usb", ATTR{idVendor}=="05c6" MODE="0664", GROUP="users", SYMLINK+="android%n"
+
+	  ATTRS{idVendor}=="16c0", ATTRS{idProduct}=="04[789B]?", ENV{ID_MM_DEVICE_IGNORE}="1"
+	  ATTRS{idVendor}=="16c0", ATTRS{idProduct}=="04[789A]?", ENV{MTP_NO_PROBE}="1"
+	  SUBSYSTEMS=="usb", ATTRS{idVendor}=="16c0", ATTRS{idProduct}=="04[789ABCD]?", MODE:="0666"
+	  KERNEL=="ttyACM*", ATTRS{idVendor}=="16c0", ATTRS{idProduct}=="04[789B]?", MODE:="0666"
+      '';
+ 
       # For Thunar volume support.
       udisks2.enable = true;
 

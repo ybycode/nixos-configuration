@@ -143,8 +143,11 @@ with builtins; with pkgs.lib; {
     smplayer
     vlc
 
-  ];
+    # for bluetooth
+    bluez
+    blueman
 
+  ];
 
   # environment variables # TODO make it work
   environment.variables = {
@@ -188,8 +191,10 @@ with builtins; with pkgs.lib; {
 
   # Sound and video configuration
   hardware = {
+    bluetooth.enable = true;
     pulseaudio.enable = true;
     pulseaudio.support32Bit = true;
+    pulseaudio.package = pkgs.pulseaudioFull; # for bluetooth support
     opengl.driSupport32Bit = true;
   };
 

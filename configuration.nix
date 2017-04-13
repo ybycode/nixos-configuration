@@ -215,78 +215,89 @@ with builtins; with pkgs.lib; {
 
   # List services that you want to enable:
 
-  # Openssh settings.
-  services.openssh.enable = false;
-  services.openssh.permitRootLogin = "no";
+  services = {
+      avahi = {
+          enable = true;
+	  nssmdns = true;
+      };
 
-  # Enable CUPS to print documents.
-  services.printing.enable = true;
+      openssh = {
+          enable = false;
+          permitRootLogin = "no";
+      };
 
-  # Enabling the battery management:
-  services.tlp.enable = true;
+      printing = {
+            enable = true;
+            drivers = [ pkgs.epson-escpr ];
+      };
 
-  # Udev rules.
-  services.udev.extraRules = ''
-    # Add access to the webcam for the group users:
-    SUBSYSTEM=="usb", ATTR{idVendor}=="04ca" MODE="0664", GROUP="users"
-    # 05c6 is Qualcomm, to allow debugging on the One Plus:
-    SUBSYSTEM=="usb", ATTR{idVendor}=="05c6" MODE="0664", GROUP="users", SYMLINK+="android%n"
-  '';
+      # For Thunar volume support.
+      udisks2.enable = true;
 
-  # For Thunar volume support.
-  services.udisks2.enable = true;
+      # Enable the X11 windowing system.
+      xserver = {
+          enable = true;
+          layout = "fr";
+          xkbOptions = "eurosign:e";
 
-  # Enable the X11 windowing system.
-  services.xserver.enable = true;
-  services.xserver.layout = "fr";
-  services.xserver.xkbOptions = "eurosign:e";
+          windowManager.i3.enable = true;
+          synaptics= {
+              enable = true;
+              accelFactor = "0.035";
+              twoFingerScroll = true;
+              additionalOptions = ''
+                Option "VertScrollDelta" "-114"
+                Option "HorizScrollDelta" "-114"
+              '';
+          };
 
-  services.xserver.windowManager.i3.enable = true;
-  services.xserver.synaptics= {
-    enable = true;
-    accelFactor = "0.035";
-    twoFingerScroll = true;
-    additionalOptions = ''
-      Option "VertScrollDelta" "-114"
-      Option "HorizScrollDelta" "-114"
-    '';
+          displayManager.lightdm.enable = true;
+          videoDrivers = [ "intel" ];
+          deviceSection = ''
+              Option      "AccelMethod" "sna"
+              Driver      "intel"
+              BusID       "PCI:0:2:0"
+              Option      "DRI"    "true"
+              Option      "TearFree"    "true"
+          '';
+
+          useGlamor = true;
+
+      };
   };
-  
-  services.xserver.displayManager.lightdm.enable = true;
-  services.xserver.videoDrivers = [ "intel" ];
-  services.xserver.deviceSection = ''
-        Option      "AccelMethod" "sna"
-	Driver      "intel"
-	BusID       "PCI:0:2:0"
-        Option      "DRI"    "true"
-        Option      "TearFree"    "true"
-  '';
-  services.xserver.useGlamor = true;
+
+
+
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
-  users.extraUsers.yann= {
-    isNormalUser = true;
-    group = "yann";
-    extraGroups = [ "wheel" "video" "dialout" "docker" "networkmanager" ];
-    uid = 1000;
-    shell = "/run/current-system/sw/bin/zsh";
-    # define uid and guid to use with docker user namespaces.
-    # apt uid is 65534 in containers. Thus the count > 65534
-    subUidRanges = [ { count = 1; startUid = 1000; } { count = 65536; startUid = 100001; } ];
-    subGidRanges = [ { count = 1; startGid = 100; } { count = 65536; startGid = 100001; } ];
+  users = {
+      extraUsers.yann= {
+          isNormalUser = true;
+          group = "yann";
+          extraGroups = [ "wheel" "video" "dialout" "docker" "lp" "networkmanager" "scanner" ];
+          uid = 1000;
+          shell = "/run/current-system/sw/bin/zsh";
+          # define uid and guid to use with docker user namespaces.
+          # apt uid is 65534 in containers. Thus the count > 65534
+          subUidRanges = [ { count = 1; startUid = 1000; } { count = 65536; startUid = 100001; } ];
+          subGidRanges = [ { count = 1; startGid = 1000; } { count = 65536; startGid = 100001; } ];
+      };
+
+      # create the group yann, gid 1000:
+      extraGroups.yann.gid = 1000;
   };
 
-  # create the group yann, gid 1000:
-  users.extraGroups.yann.gid = 1000; 
 
   # The NixOS release to be compatible with for stateful data such as databases.
   system.stateVersion = "16.09";
 
   # Enable the docker daemon and map the container root user to yann:
-  virtualisation.docker.enable = true;
-  virtualisation.docker.extraOptions = ''
-    --userns-remap=yann
-  '';
+  virtualisation.docker = {
+      enable = true;
+      extraOptions = ''
+        --userns-remap=1000:1000
+      '';
+  };
 
 
 }

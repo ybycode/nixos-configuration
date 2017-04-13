@@ -60,6 +60,8 @@ with builtins; with pkgs.lib; {
     inconsolata
 
     # linux tools:
+    #avahi mod_dnssd
+    #(pkgs.avahi.override { gtk=pkgs.gtk3; }) mod_dnssd
     baobab
     cifs-utils
     docker
@@ -74,7 +76,6 @@ with builtins; with pkgs.lib; {
     rsync
     rxvt_unicode
     sshfsFuse
-    #tlp # for battery management
     tmux
     tree
     unrar

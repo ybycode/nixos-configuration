@@ -143,6 +143,10 @@ with builtins; with pkgs.lib; {
     smplayer
     vlc
 
+    # scan
+    xsane
+    simple-scan
+
     # for bluetooth
     bluez
     blueman
@@ -196,6 +200,7 @@ with builtins; with pkgs.lib; {
     pulseaudio.support32Bit = true;
     pulseaudio.package = pkgs.pulseaudioFull; # for bluetooth support
     opengl.driSupport32Bit = true;
+    sane.enable = true;
   };
 
   programs.zsh={

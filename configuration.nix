@@ -246,6 +246,9 @@ with builtins; with pkgs.lib; {
 	  ATTRS{idVendor}=="16c0", ATTRS{idProduct}=="04[789A]?", ENV{MTP_NO_PROBE}="1"
 	  SUBSYSTEMS=="usb", ATTRS{idVendor}=="16c0", ATTRS{idProduct}=="04[789ABCD]?", MODE:="0666"
 	  KERNEL=="ttyACM*", ATTRS{idVendor}=="16c0", ATTRS{idProduct}=="04[789B]?", MODE:="0666"
+
+	  # for Yubico, from https://github.com/Yubico/libu2f-host/blob/master/70-u2f.rules
+          ACTION=="add|change", ATTRS{idVendor}=="1050", ATTRS{idProduct}=="0113|0114|0115|0116|0120|0402|0403|0406|0407|0410", MODE="0666"
       '';
  
       # For Thunar volume support.

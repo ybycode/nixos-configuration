@@ -92,15 +92,18 @@ with builtins; with pkgs.lib; {
     firefox
     thunderbird
     transmission_gtk
+    openvpn
 
     # development:
     arduino
+    ag
     elixir
     git
     neovim
     ngrok
     python
     python3
+    python35Packages.jedi
 
     # for Desktop:
     arandr
@@ -110,6 +113,7 @@ with builtins; with pkgs.lib; {
     lightdm
     networkmanager
     networkmanagerapplet
+    networkmanager_openvpn
     pavucontrol
     unclutter
     xautolock
@@ -126,10 +130,10 @@ with builtins; with pkgs.lib; {
     xfce.xfconf
 
     # theme:
-    gnome.gnomeicontheme
-    gtk
-    oxygen-gtk2
-    oxygen-gtk3
+    #gnome.gnomeicontheme
+    #gtk
+    #oxygen-gtk2
+    #oxygen-gtk3
     hicolor_icon_theme
     shared_mime_info
     xfce.gtk_xfce_engine

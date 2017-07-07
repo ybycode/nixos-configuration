@@ -172,7 +172,6 @@ with builtins; with pkgs.lib; {
     
     ## so that GTK+ can find the theme engines.
     export GTK_PATH=$GTK_PATH:${pkgs.xfce.gtk_xfce_engine}/lib/gtk-2.0
-    #export GTK_PATH=$GTK_PATH:${pkgs.oxygen_gtk}/lib/gtk-2.0
 
     #
     export GTK2_RC_FILES=$GTK2_RC_FILES:${pkgs.xfce.gtk_xfce_engine}/share/themes/oxygen-gtk/gtk-2.0/gtkrc

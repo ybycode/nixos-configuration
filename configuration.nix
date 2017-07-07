@@ -235,6 +235,10 @@ with builtins; with pkgs.lib; {
             drivers = [ pkgs.epson-escpr ];
       };
 
+      # to fix the error described in https://github.com/NixOS/nixpkgs/issues/16327
+      # that I was having when trying to save scanned images with xsane or simple-scan:
+      gnome3.at-spi2-core.enable = true;
+
       # Udev rules.
       udev.extraRules = ''
           # Add access to the webcam for the group users:

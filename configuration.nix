@@ -24,7 +24,7 @@ with builtins; with pkgs.lib; {
   # Define on which hard drive you want to install Grub.
   boot.loader.grub.device = "/dev/sda"; # or "nodev" for efi only
   boot.loader.grub.extraEntries = ''
-    menuentry "Windows 10" {
+    menuentry "Ubuntu" {
       chainloader (hd0,1)+1
     }
   '';
@@ -32,7 +32,10 @@ with builtins; with pkgs.lib; {
   networking = {
     hostName = "darkstar"; # Define your hostname.
     # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
-    networkmanager.enable = true;
+    networkmanager = {
+      enable = true;
+      #appendNameservers = [ "8.8.8.8" ];
+    };
     extraHosts = ''
       172.17.0.1 docker
       127.0.0.1 dev-local.com
@@ -47,7 +50,7 @@ with builtins; with pkgs.lib; {
   };
 
   # Set your time zone.
-  time.timeZone = "Europe/Paris";
+  time.timeZone = "America/Los_Angeles";
 
   nixpkgs.config.allowUnfree = true; # for unrar
 
@@ -65,14 +68,20 @@ with builtins; with pkgs.lib; {
     baobab
     cifs-utils
     docker
-    python27Packages.docker_compose
     gparted
+    ffmpeg
     htop
+    inetutils
+    jq
     keychain
+    nload
+    ntfs3g
     oh-my-zsh
     p7zip
     pciutils
+    python27Packages.docker_compose
     python35Packages.neovim
+    pv
     rsync
     rxvt_unicode
     sshfsFuse
@@ -99,11 +108,17 @@ with builtins; with pkgs.lib; {
     ag
     elixir
     git
+    go
+    goimports
     neovim
     ngrok
     python
     python3
     python35Packages.jedi
+
+    # virtualization
+    virtualbox
+    vagrant
 
     # for Desktop:
     arandr
@@ -116,8 +131,12 @@ with builtins; with pkgs.lib; {
     networkmanager_openvpn
     pavucontrol
     unclutter
+    urxvt_font_size
     xautolock
+    xorg.xmodmap
     xorg.xbacklight
+    xorg.xkill
+    yubikey-personalization-gui
     zathura
 
     # XFCE:
@@ -216,6 +235,11 @@ with builtins; with pkgs.lib; {
       source $ZSH/oh-my-zsh.sh
     '';
   };
+
+  fonts.fonts = [
+    pkgs.dejavu_fonts
+    pkgs.inconsolata
+  ];
 
   # List services that you want to enable:
 
@@ -318,9 +342,15 @@ with builtins; with pkgs.lib; {
   # Enable the docker daemon and map the container root user to yann:
   virtualisation.docker = {
       enable = true;
-      extraOptions = ''
-        --userns-remap=1000:1000
-      '';
+      enableOnBoot = true;
+      # extraOptions = '';
+      #   # --userns-remap=1000:1000
+      # '';
+  };
+
+  virtualisation.virtualbox = {
+      host.enable = true;
+      host.headless = true;
   };
 
 

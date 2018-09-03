@@ -155,7 +155,6 @@ with builtins; with pkgs.lib; {
     #oxygen-gtk3
     hicolor_icon_theme
     shared_mime_info
-    xfce.gtk_xfce_engine
     xfce.xfce4icontheme
 
     # X11 multimedia:
@@ -189,12 +188,6 @@ with builtins; with pkgs.lib; {
 
   environment.shellInit = ''
     
-    ## so that GTK+ can find the theme engines.
-    export GTK_PATH=$GTK_PATH:${pkgs.xfce.gtk_xfce_engine}/lib/gtk-2.0
-
-    #
-    export GTK2_RC_FILES=$GTK2_RC_FILES:${pkgs.xfce.gtk_xfce_engine}/share/themes/oxygen-gtk/gtk-2.0/gtkrc
-
     ## so that GTK+ can find the Xfce themes.
     export GTK_DATA_PREFIX=${config.system.path}
     # so that gvfs works.
@@ -219,6 +212,10 @@ with builtins; with pkgs.lib; {
   # Sound and video configuration
   hardware = {
     bluetooth.enable = true;
+    bluetooth.extraConfig = "
+      [General]
+      Enable=Source,Sink,Media,Socket
+    ";
     pulseaudio.enable = true;
     pulseaudio.support32Bit = true;
     pulseaudio.package = pkgs.pulseaudioFull; # for bluetooth support
@@ -337,7 +334,7 @@ with builtins; with pkgs.lib; {
 
 
   # The NixOS release to be compatible with for stateful data such as databases.
-  system.stateVersion = "16.09";
+  system.stateVersion = "18.03";
 
   # Enable the docker daemon and map the container root user to yann:
   virtualisation.docker = {

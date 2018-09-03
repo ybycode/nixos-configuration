@@ -50,7 +50,7 @@ with builtins; with pkgs.lib; {
   };
 
   # Set your time zone.
-  time.timeZone = "America/Los_Angeles";
+  time.timeZone = "Europe/Berlin";
 
   nixpkgs.config.allowUnfree = true; # for unrar
 

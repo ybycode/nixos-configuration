@@ -14,6 +14,9 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
+  # # To choose which kernel to use. See https://nixos.wiki/wiki/Linux_kernel
+  # boot.kernelPackages = pkgs.linuxPackages_latest-libre;
+
   networking.hostName = "x1carbon"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
   networking.networkmanager.enable = true;
@@ -22,7 +25,7 @@
   i18n = {
     consoleFont = "Lat2-Terminus16";
     consoleKeyMap = "fr";
-    defaultLocale = "fr_FR.UTF-8";
+    defaultLocale = "en_US.UTF-8";
   };
 
   # Set your time zone.
@@ -58,7 +61,6 @@
     neovim
     pv
     rsync
-    rxvt_unicode
     sshfsFuse
     tmux
     tree
@@ -106,6 +108,7 @@
     networkmanager_openvpn
     pavucontrol
     unclutter
+    rxvt_unicode-with-plugins
     urxvt_font_size
     xautolock
     xorg.xmodmap
@@ -295,6 +298,7 @@
                           "networkmanager"
                           "scanner"
                           "video"
+                          "vboxusers"
                           "wheel"
           ];
           uid = 1000;
@@ -327,6 +331,6 @@
   # compatible, in order to avoid breaking some software such as database
   # servers. You should change this only after NixOS release notes say you
   # should.
-  system.stateVersion = "19.03"; # Did you read the comment?
+  system.stateVersion = "19.09"; # Did you read the comment?
 
 }

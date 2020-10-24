@@ -14,24 +14,31 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  # # To choose which kernel to use. See https://nixos.wiki/wiki/Linux_kernel
-  # boot.kernelPackages = pkgs.linuxPackages_latest-libre;
-
   networking.hostName = "x1carbon"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
+
+  # The global useDHCP flag is deprecated, therefore explicitly set to false here.
+  # Per-interface useDHCP will be mandatory in the future, so this generated config
+  # replicates the default behaviour.
+  networking.useDHCP = false;
+  networking.interfaces.enp0s31f6.useDHCP = true;
+  networking.interfaces.wlp0s20f3.useDHCP = true;
   networking.networkmanager.enable = true;
+  networking.firewall.enable = true;
+
+  # Configure network proxy if necessary
+  # networking.proxy.default = "http://user:password@proxy:port/";
+  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
 
   # Select internationalisation properties.
-  i18n = {
-    consoleFont = "Lat2-Terminus16";
-    consoleKeyMap = "fr";
-    defaultLocale = "en_US.UTF-8";
+  i18n.defaultLocale = "en_US.UTF-8";
+  console = {
+    font = "Lat2-Terminus16";
+    keyMap = "fr";
   };
 
   # Set your time zone.
   time.timeZone = "Europe/Berlin";
-
-  nixpkgs.config.allowUnfree = true; # for unrar
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
@@ -45,6 +52,8 @@
     #(pkgs.avahi.override { gtk=pkgs.gtk3; }) mod_dnssd
     baobab
     cifs-utils
+    direnv
+    dnsutils
     docker
     gparted
     ffmpeg
@@ -64,11 +73,12 @@
     sshfsFuse
     tmux
     tree
-    unrar
+    # unrar
     unzip
     usbutils
     wget
     xorg.xhost
+    xclip
     xsel
     zip
 
@@ -76,7 +86,7 @@
     chromium
     filezilla
     firefox
-    thunderbird
+    # thunderbird
     transmission_gtk
     openvpn
 
@@ -88,14 +98,27 @@
     go
     goimports
     neovim
-    ngrok
+    # ngrok
     python
     python3
     python35Packages.jedi
 
+
+    # security:
+    pass
+    srm
+    yubikey-manager
+    yubikey-personalization
+    yubikey-personalization-gui
+
+    # ops
+    awscli
+    aws-vault
+    terraform
+
     # virtualization
-    virtualbox
-    vagrant
+    # virtualbox
+    # vagrant
 
     # for Desktop:
     arandr
@@ -118,7 +141,7 @@
     zathura
 
     # XFCE:
-    xfce.libxfcegui4
+    # xfce.libxfcegui4 # upgrade 20.03
     xfce.gvfs
     xfce.terminal
     xfce.thunar
@@ -145,12 +168,12 @@
     vlc
 
     # scan
-    xsane
-    simple-scan
+    # xsane
+    # simple-scan
 
     # for bluetooth
-    bluez
-    blueman
+    # bluez
+    # blueman
   ];
 
   fileSystems."/mnt/data" = {
@@ -164,40 +187,73 @@
     options = [ "bind" ];
   };
 
-  # Sound and video configuration
+  # Some programs need SUID wrappers, can be configured further or are
+  # started in user sessions.
+  # programs.mtr.enable = true;
+  programs = {
+    ssh.startAgent = false;
+    gnupg.agent = {
+      enable = true;
+      enableSSHSupport = true;
+      pinentryFlavor = "gnome3";
+    };
+    zsh = {
+      enable = true;
+      interactiveShellInit = ''
+        export ZSH=${pkgs.oh-my-zsh}/share/oh-my-zsh/
+        ZSH_THEME="avit"
+        plugins=(git)
+        source $ZSH/oh-my-zsh.sh
+      '';
+    };
+
+    # android dev:
+    adb.enable = true;
+  };
+
+  # List services that you want to enable:
+
+  # Enable the OpenSSH daemon.
+  # services.openssh.enable = true;
+
+  # Open ports in the firewall.
+  # networking.firewall.allowedTCPPorts = [ ... ];
+  # networking.firewall.allowedUDPPorts = [ ... ];
+  # Or disable the firewall altogether.
+  # networking.firewall.enable = false;
+
+  # Enable CUPS to print documents.
+  # services.printing.enable = true;
+
+  # Enable sound.
+  # sound.enable = true;
+    # Sound and video configuration
   hardware = {
-    bluetooth.enable = true;
-    bluetooth.extraConfig = "
-      [General]
-      Enable=Source,Sink,Media,Socket
-    ";
+    # TODO: # upgrade 20.03
+    # bluetooth.enable = true;
+    # bluetooth.config = "
+    #   [General]
+    #   Enable=Source,Sink,Media,Socket
+    # ";
     pulseaudio.enable = true;
     pulseaudio.support32Bit = true;
     pulseaudio.package = pkgs.pulseaudioFull; # for bluetooth support
     opengl.driSupport32Bit = true;
-    sane.enable = true;
+    # sane.enable = true;
   };
-
-  programs.zsh={
-    enable = true;
-    interactiveShellInit = ''
-      export ZSH=${pkgs.oh-my-zsh}/share/oh-my-zsh/
-      ZSH_THEME="avit"
-      plugins=(git)
-      source $ZSH/oh-my-zsh.sh
-    '';
-  };
-
-  # android dev:
-  programs.adb.enable = true;
 
   fonts.fonts = [
     pkgs.dejavu_fonts
     pkgs.inconsolata
   ];
 
-  # List services that you want to enable:
+  # Enable the X11 windowing system.
+  # services.xserver.enable = true;
+  # services.xserver.layout = "us";
+  # services.xserver.xkbOptions = "eurosign:e";
 
+  # Enable touchpad support.
+  # services.xserver.libinput.enable = true;
   services = {
       tlp = {
           enable = true;
@@ -221,7 +277,11 @@
 
       # to fix the error described in https://github.com/NixOS/nixpkgs/issues/16327
       # that I was having when trying to save scanned images with xsane or simple-scan:
-      gnome3.at-spi2-core.enable = true;
+      # gnome3.at-spi2-core.enable = true; # TODO: still needed??
+
+      # Needed for yubikey (see https://nixos.wiki/wiki/Yubikey):
+      pcscd.enable = true;
+      udev.packages = [ pkgs.yubikey-personalization ];
 
       # Udev rules.
       udev.extraRules = ''
@@ -249,7 +309,7 @@
           enable = true;
 
           desktopManager = {
-            default = "none";
+            # default = "none";
             xterm.enable = false;
           };
 
@@ -267,7 +327,11 @@
               '';
           };
 
-          displayManager.lightdm.enable = true;
+          displayManager = {
+            lightdm.enable = true;
+            defaultSession = "none+i3";
+          };
+
           videoDrivers = [ "intel" ];
           # deviceSection = ''
           #     Option      "AccelMethod" "sna"
@@ -282,10 +346,10 @@
       };
   };
 
+  # Enable the KDE Desktop Environment.
+  # services.xserver.displayManager.sddm.enable = true;
+  # services.xserver.desktopManager.plasma5.enable = true;
 
-
-
-  # Define a user account. Don't forget to set a password with ‘passwd’.
   users = {
       extraUsers.yann= {
           isNormalUser = true;
@@ -298,7 +362,7 @@
                           "networkmanager"
                           "scanner"
                           "video"
-                          "vboxusers"
+			  "virtd"
                           "wheel"
           ];
           uid = 1000;
@@ -311,7 +375,11 @@
 
       # create the group yann, gid 1000:
       extraGroups.yann.gid = 1000;
+      extraGroups.vboxusers.members = [ "yann" ];
   };
+
+  # virtualisation.libvirtd.enable
+  virtualisation.virtualbox.host.enable = true;
 
   # Enable the docker daemon and map the container root user to yann:
   virtualisation.docker = {
@@ -322,15 +390,13 @@
       # '';
   };
 
-  virtualisation.virtualbox = {
-      host.enable = true;
-      host.headless = true;
-  };
-
-  # This value determines the NixOS release with which your system is to be
-  # compatible, in order to avoid breaking some software such as database
-  # servers. You should change this only after NixOS release notes say you
-  # should.
-  system.stateVersion = "19.09"; # Did you read the comment?
+  # This value determines the NixOS release from which the default
+  # settings for stateful data, like file locations and database versions
+  # on your system were taken. It‘s perfectly fine and recommended to leave
+  # this value at the release version of the first install of this system.
+  # Before changing this value read the documentation for this option
+  # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
+  system.stateVersion = "20.03"; # Did you read the comment?
 
 }
+

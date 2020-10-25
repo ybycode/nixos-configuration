@@ -40,6 +40,9 @@
   # Set your time zone.
   time.timeZone = "Europe/Berlin";
 
+  # for zoom-us:
+  nixpkgs.config.allowUnfree = true;
+
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
@@ -58,6 +61,7 @@
     gparted
     ffmpeg
     htop
+    imagemagick
     inetutils
     jq
     keychain
@@ -73,7 +77,6 @@
     sshfsFuse
     tmux
     tree
-    # unrar
     unzip
     usbutils
     wget
@@ -98,10 +101,12 @@
     go
     goimports
     neovim
+    nodejs-12_x
+    nodePackages.prettier
+    nodePackages.yarn
     # ngrok
     python
     python3
-    python35Packages.jedi
 
 
     # security:
@@ -130,6 +135,7 @@
     networkmanagerapplet
     networkmanager_openvpn
     pavucontrol
+    pinentry
     unclutter
     rxvt_unicode-with-plugins
     urxvt_font_size
@@ -166,6 +172,9 @@
     mplayer
     smplayer
     vlc
+
+    # sad
+    zoom-us
 
     # scan
     # xsane

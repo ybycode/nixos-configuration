@@ -13,6 +13,9 @@
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
+  # without this parameter, firefox was really slow (typing and display
+  # lagging):
+  boot.kernelParams = [ "intel_pstate=active" ];
 
   networking.hostName = "x1carbon"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.

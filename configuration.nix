@@ -294,6 +294,21 @@
     enableRedistributableFirmware = true;
   };
 
+  # fwupd allows to install/update devices firmwares, one of which is the
+  # fingerprint reader. See https://wiki.archlinux.org/index.php/fwupd#Usage.
+  services.fwupd.enable = true;
+  # Fingerprint reader. To have it working, I had to run (as root) :
+  # ```
+  # # fwupdmgr refresh && fwupdmgr update
+  # ```
+  # then as a user:
+  # ```
+  # $ fprintd-enroll
+  # ```
+  services.fprintd.enable = true;
+  security.pam.services.login.fprintAuth = true;
+  security.pam.services.xscreensaver.fprintAuth = true;
+
   fonts.fonts = [
     pkgs.dejavu_fonts
     pkgs.inconsolata
@@ -397,6 +412,7 @@
           group = "yann";
           extraGroups = [ "adbusers"
                           "audio"
+                          "cdrom"
                           "dialout"
                           "docker"
                           "lp"
@@ -420,7 +436,7 @@
   };
 
   # virtualisation.libvirtd.enable
-  virtualisation.virtualbox.host.enable = true;
+  # virtualisation.virtualbox.host.enable = true;
 
   # Enable the docker daemon and map the container root user to yann:
   virtualisation.docker = {

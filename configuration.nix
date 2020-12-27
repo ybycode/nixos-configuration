@@ -20,21 +20,27 @@
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-  # without this parameter, firefox was really slow (typing and display
-  # lagging):
-  boot.kernelParams = [ "intel_pstate=active" ];
 
-  networking.hostName = "x1carbon"; # Define your hostname.
-  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
+  networking = {
+    hostName = "x1carbon"; # Define your hostname.
+    # wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
-  # The global useDHCP flag is deprecated, therefore explicitly set to false here.
-  # Per-interface useDHCP will be mandatory in the future, so this generated config
-  # replicates the default behaviour.
-  networking.useDHCP = false;
-  networking.interfaces.enp0s31f6.useDHCP = true;
-  networking.interfaces.wlp0s20f3.useDHCP = true;
-  networking.networkmanager.enable = true;
-  networking.firewall.enable = true;
+    nameservers = [ "1.1.1.1" "8.8.8.8" ];
+
+    # The global useDHCP flag is deprecated, therefore explicitly set to false here.
+    # Per-interface useDHCP will be mandatory in the future, so this generated config
+    # replicates the default behaviour.
+    useDHCP = false;
+    interfaces.enp0s31f6.useDHCP = true;
+    interfaces.wlp0s20f3.useDHCP = true;
+    networkmanager = {
+      enable = true;
+      dns = "none"; # to use the nameservers defined statically above.
+      wifi.powersave = false;
+      wifi.scanRandMacAddress = false;
+    };
+    firewall.enable = true;
+  };
 
   # Configure network proxy if necessary
   # networking.proxy.default = "http://user:password@proxy:port/";

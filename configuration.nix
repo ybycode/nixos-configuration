@@ -74,20 +74,22 @@
     direnv
     dnsutils
     docker
-    gparted
+    docker-compose
+    docker-credential-helpers
     ffmpeg
+    gparted
     htop
     imagemagick
     inetutils
     jq
     keychain
+    kubectl
+    neovim
     nload
     ntfs3g
     oh-my-zsh
     p7zip
     pciutils
-    docker-compose
-    neovim
     pv
     rsync
     sshfsFuse
@@ -96,9 +98,10 @@
     unzip
     usbutils
     wget
-    xorg.xhost
     xclip
+    xorg.xhost
     xsel
+    xss-lock
     zip
 
     # internet:
@@ -120,12 +123,15 @@
     nodejs-12_x
     nodePackages.prettier
     nodePackages.yarn
-    # ngrok
-    python
+    ngrok
     python3
+    shellcheck
 
+    # purescript and its manager spago
+    purescript spago
 
-    # security:
+    # security & encryption:
+    cryptsetup
     pass
     srm
     yubikey-manager
@@ -146,20 +152,21 @@
     dmenu
     i3lock
     i3status
+    kitty # terminal
     lightdm
     networkmanager
-    networkmanagerapplet
     networkmanager_openvpn
+    networkmanagerapplet
     pavucontrol
+    peek # animated GIF recorder
     pinentry
-    unclutter
     rxvt_unicode-with-plugins
+    unclutter
     urxvt_font_size
     xautolock
-    xorg.xmodmap
     xorg.xbacklight
     xorg.xkill
-    yubikey-personalization-gui
+    xorg.xmodmap
     zathura
 
     # XFCE:

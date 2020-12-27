@@ -258,20 +258,40 @@
   # services.printing.enable = true;
 
   # Enable sound.
-  # sound.enable = true;
-    # Sound and video configuration
+  sound.enable = true;
+
   hardware = {
-    # TODO: # upgrade 20.03
-    # bluetooth.enable = true;
-    # bluetooth.config = "
-    #   [General]
-    #   Enable=Source,Sink,Media,Socket
-    # ";
-    pulseaudio.enable = true;
-    pulseaudio.support32Bit = true;
-    pulseaudio.package = pkgs.pulseaudioFull; # for bluetooth support
+
+    bluetooth = {
+      # https://nixos.wiki/wiki/Bluetooth
+      enable = true;
+      config = {
+        General = {
+          # Enabling A2DP Sink
+          Enable = "Source,Sink,Media,Socket";
+        };
+      };
+    };
+
     opengl.driSupport32Bit = true;
+    pulseaudio = {
+      enable = true;
+      package = pkgs.pulseaudioFull; # for bluetooth support
+      support32Bit = true;
+
+      # keyboard mute & mic LED do not follow the pulseaudio settings. Problem
+      # of config to map source and sinks? This following config didn't fix
+      # anything:
+      # See
+      # https://wiki.archlinux.org/index.php/Lenovo_ThinkPad_X1_Carbon_(Gen_7)#Audio
+      # extraConfig = ''
+      #   load-module module-alsa-sink   device=hw:0,0 channels=4
+      #   load-module module-alsa-source device=hw:0,6 channels=4
+      # '';
+    };
     # sane.enable = true;
+
+    enableRedistributableFirmware = true;
   };
 
   fonts.fonts = [
@@ -279,108 +299,97 @@
     pkgs.inconsolata
   ];
 
-  # Enable the X11 windowing system.
-  # services.xserver.enable = true;
-  # services.xserver.layout = "us";
-  # services.xserver.xkbOptions = "eurosign:e";
-
-  # Enable touchpad support.
-  # services.xserver.libinput.enable = true;
   services = {
-      tlp = {
+    avahi = {
+      enable = true;
+	    nssmdns = true;
+    };
+
+    blueman.enable = true;
+
+    openssh = {
+      enable = true;
+	    passwordAuthentication = false;
+      permitRootLogin = "no";
+    };
+
+    # to fix the error described in https://github.com/NixOS/nixpkgs/issues/16327
+    # that I was having when trying to save scanned images with xsane or simple-scan:
+    # gnome3.at-spi2-core.enable = true; # TODO: still needed??
+
+    # Needed for yubikey (see https://nixos.wiki/wiki/Yubikey):
+    pcscd.enable = true;
+
+    printing = {
+      enable = true;
+      drivers = [ pkgs.epson-escpr ];
+    };
+
+    tlp = {
+      enable = true;
+    };
+
+    udev.packages = [ pkgs.yubikey-personalization ];
+
+    # Udev rules.
+    udev.extraRules = ''
+        # Add access to the webcam for the group users:
+        SUBSYSTEM=="usb", ATTR{idVendor}=="04ca" MODE="0664", GROUP="users"
+        # 05c6 is Qualcomm, to allow debugging on the One Plus:
+        SUBSYSTEM=="usb", ATTR{idVendor}=="05c6" MODE="0664", GROUP="users", SYMLINK+="android%n"
+        # One plus 5:
+        SUBSYSTEM=="usb", ATTR{idVendor}=="2a70" MODE="0664", GROUP="users", SYMLINK+="android%n"
+
+	      ATTRS{idVendor}=="16c0", ATTRS{idProduct}=="04[789B]?", ENV{ID_MM_DEVICE_IGNORE}="1"
+	      ATTRS{idVendor}=="16c0", ATTRS{idProduct}=="04[789A]?", ENV{MTP_NO_PROBE}="1"
+	      SUBSYSTEMS=="usb", ATTRS{idVendor}=="16c0", ATTRS{idProduct}=="04[789ABCD]?", MODE:="0666"
+	      KERNEL=="ttyACM*", ATTRS{idVendor}=="16c0", ATTRS{idProduct}=="04[789B]?", MODE:="0666"
+
+	      # for Yubico, from https://github.com/Yubico/libu2f-host/blob/master/70-u2f.rules
+        ACTION=="add|change", ATTRS{idVendor}=="1050", ATTRS{idProduct}=="0113|0114|0115|0116|0120|0402|0403|0406|0407|0410", MODE="0666"
+    '';
+
+    # For Thunar volume support.
+    udisks2.enable = true;
+
+    # Enable the X11 windowing system.
+    xserver = {
+        enable = true;
+
+        libinput = {
           enable = true;
-      };
+          naturalScrolling = true;
+        };
 
-      avahi = {
-          enable = true;
-	  nssmdns = true;
-      };
+        desktopManager = {
+          # default = "none";
+          xterm.enable = false;
+        };
 
-      openssh = {
-          enable = true;
-	  passwordAuthentication = false;
-          permitRootLogin = "no";
-      };
+        layout = "fr";
+        xkbOptions = "eurosign:e";
 
-      printing = {
-            enable = true;
-            drivers = [ pkgs.epson-escpr ];
-      };
+        windowManager.i3.enable = true;
 
-      # to fix the error described in https://github.com/NixOS/nixpkgs/issues/16327
-      # that I was having when trying to save scanned images with xsane or simple-scan:
-      # gnome3.at-spi2-core.enable = true; # TODO: still needed??
+        displayManager = {
+          lightdm.enable = true;
+          defaultSession = "none+i3";
+        };
 
-      # Needed for yubikey (see https://nixos.wiki/wiki/Yubikey):
-      pcscd.enable = true;
-      udev.packages = [ pkgs.yubikey-personalization ];
+        videoDrivers = [ "intel" ];
 
-      # Udev rules.
-      udev.extraRules = ''
-          # Add access to the webcam for the group users:
-          SUBSYSTEM=="usb", ATTR{idVendor}=="04ca" MODE="0664", GROUP="users"
-          # 05c6 is Qualcomm, to allow debugging on the One Plus:
-          SUBSYSTEM=="usb", ATTR{idVendor}=="05c6" MODE="0664", GROUP="users", SYMLINK+="android%n"
-          # One plus 5:
-          SUBSYSTEM=="usb", ATTR{idVendor}=="2a70" MODE="0664", GROUP="users", SYMLINK+="android%n"
+        # alacritty, kitty, chromium sometimes freeze when switching desktop.
+        # See the following for the reason why the "DRI" "2" option:
+        # https://github.com/kovidgoyal/kitty/issues/1681#issuecomment-683966060
+        # https://wiki.archlinux.org/index.php/intel_graphics#DRI3_issues
+        # https://bugs.chromium.org/p/chromium/issues/detail?id=370022
+        # deviceSection = ''
+        #   Option "DRI" "2"
+        # '';
 
-	  ATTRS{idVendor}=="16c0", ATTRS{idProduct}=="04[789B]?", ENV{ID_MM_DEVICE_IGNORE}="1"
-	  ATTRS{idVendor}=="16c0", ATTRS{idProduct}=="04[789A]?", ENV{MTP_NO_PROBE}="1"
-	  SUBSYSTEMS=="usb", ATTRS{idVendor}=="16c0", ATTRS{idProduct}=="04[789ABCD]?", MODE:="0666"
-	  KERNEL=="ttyACM*", ATTRS{idVendor}=="16c0", ATTRS{idProduct}=="04[789B]?", MODE:="0666"
-
-	  # for Yubico, from https://github.com/Yubico/libu2f-host/blob/master/70-u2f.rules
-          ACTION=="add|change", ATTRS{idVendor}=="1050", ATTRS{idProduct}=="0113|0114|0115|0116|0120|0402|0403|0406|0407|0410", MODE="0666"
-      '';
-
-      # For Thunar volume support.
-      udisks2.enable = true;
-
-      # Enable the X11 windowing system.
-      xserver = {
-          enable = true;
-
-          desktopManager = {
-            # default = "none";
-            xterm.enable = false;
-          };
-
-          layout = "fr";
-          xkbOptions = "eurosign:e";
-
-          windowManager.i3.enable = true;
-          synaptics= {
-              enable = true;
-              accelFactor = "0.035";
-              twoFingerScroll = true;
-              additionalOptions = ''
-                Option "VertScrollDelta" "-80"
-                Option "HorizScrollDelta" "-80"
-              '';
-          };
-
-          displayManager = {
-            lightdm.enable = true;
-            defaultSession = "none+i3";
-          };
-
-          videoDrivers = [ "intel" ];
-          # deviceSection = ''
-          #     Option      "AccelMethod" "sna"
-          #     Driver      "intel"
-          #     BusID       "PCI:0:2:0"
-          #     Option      "DRI"    "true"
-          #     Option      "TearFree"    "true"
-          # '';
-
-          useGlamor = true;
-
-      };
+         # useGlamor = true;
+    };
   };
-
-  # Enable the KDE Desktop Environment.
-  # services.xserver.displayManager.sddm.enable = true;
-  # services.xserver.desktopManager.plasma5.enable = true;
 
   users = {
       extraUsers.yann= {

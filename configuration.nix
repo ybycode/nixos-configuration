@@ -8,6 +8,13 @@
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
+
+      # https://github.com/NixOS/nixos-hardware:
+      # initially found on
+      # https://github.com/srid/nix-config/blob/master/configuration.nix/x1c7.nix
+      <nixos-hardware/lenovo/thinkpad>
+      <nixos-hardware/lenovo/thinkpad/x1>
+      <nixos-hardware/lenovo/thinkpad/x1/7th-gen>
     ];
 
   # Use the systemd-boot EFI boot loader.

@@ -12,20 +12,33 @@
       # https://github.com/NixOS/nixos-hardware:
       # initially found on
       # https://github.com/srid/nix-config/blob/master/configuration.nix/x1c7.nix
+      <nixos-hardware/common/cpu/intel/kaby-lake>
       <nixos-hardware/lenovo/thinkpad>
       <nixos-hardware/lenovo/thinkpad/x1>
       <nixos-hardware/lenovo/thinkpad/x1/7th-gen>
     ];
 
-  # Use the systemd-boot EFI boot loader.
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
+  boot = {
+    # Use the systemd-boot EFI boot loader.
+    loader.systemd-boot.enable = true;
+    loader.efi.canTouchEfiVariables = true;
+    # because the intel video driver is not happy with the
+    # kernel v5:
+    # boot.kernelPackages = pkgs.linuxPackages_4_19;
+    kernelPackages = pkgs.linuxPackages_latest;
+    supportedFilesystems = [ "zfs" ];
+  };
+
 
   networking = {
-    hostName = "x1carbon"; # Define your hostname.
+    hostId = "72c5ac0c"; # for ZFS. Result of `head -c 8 /etc/machine-id`
+    hostName = "x1carbon";
     # wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
     nameservers = [ "1.1.1.1" "8.8.8.8" ];
+
+    # for KVM networking (from https://nixos.wiki/wiki/Using_bridges_under_NixOS)
+    dhcpcd.denyInterfaces = [ "macvtap0@*" ];
 
     # The global useDHCP flag is deprecated, therefore explicitly set to false here.
     # Per-interface useDHCP will be mandatory in the future, so this generated config
@@ -39,7 +52,12 @@
       wifi.powersave = false;
       wifi.scanRandMacAddress = false;
     };
-    firewall.enable = true;
+
+    firewall = {
+      enable = true;
+      # for wireguard:
+      # allowedUDPPorts = [51820];
+    };
   };
 
   # Configure network proxy if necessary
@@ -54,6 +72,7 @@
   };
 
   # Set your time zone.
+  # time.timeZone = "Atlantic/Canary";
   time.timeZone = "Europe/Berlin";
 
   # for zoom-us:
@@ -84,6 +103,7 @@
     jq
     keychain
     kubectl
+    lsof
     neovim
     nload
     ntfs3g
@@ -124,19 +144,25 @@
     nodePackages.prettier
     nodePackages.yarn
     ngrok
-    python3
     shellcheck
+
+    python
 
     # purescript and its manager spago
     purescript spago
 
     # security & encryption:
+    croc # to securely share files (like magic-wormhole)
     cryptsetup
+    magic-wormhole # to securely share files (like croc)
+    obexftp
     pass
     srm
+    tomb
     yubikey-manager
     yubikey-personalization
     yubikey-personalization-gui
+    # tor-browser-bundle-bin
 
     # ops
     awscli
@@ -146,6 +172,7 @@
     # virtualization
     # virtualbox
     # vagrant
+    virt-manager
 
     # for Desktop:
     arandr
@@ -171,7 +198,7 @@
 
     # XFCE:
     # xfce.libxfcegui4 # upgrade 20.03
-    xfce.gvfs
+    # xfce.gvfs
     xfce.terminal
     xfce.thunar
     xfce.thunar_volman
@@ -194,6 +221,7 @@
     libreoffice
     mplayer
     smplayer
+    udiskie # to automount USB devices
     vlc
 
     # sad
@@ -223,6 +251,7 @@
   # started in user sessions.
   # programs.mtr.enable = true;
   programs = {
+    dconf.enable = true; # for libvirtd, see https://nixos.wiki/wiki/Virt-manager
     ssh.startAgent = false;
     gnupg.agent = {
       enable = true;
@@ -305,9 +334,15 @@
   # ```
   # $ fprintd-enroll
   # ```
-  services.fprintd.enable = true;
-  security.pam.services.login.fprintAuth = true;
-  security.pam.services.xscreensaver.fprintAuth = true;
+  # TODO As of 29/12/2020 and fprint v1.90: fprintd-enroll by doesn't require a
+  # password to add a new print, and so is a security issue.
+  # The issue seems to have been fixed in fprintd v1.90.7-1, but not yet
+  # available in nixos (see
+  # https://bugs.launchpad.net/ubuntu/+source/fprintd/+bug/1532264).
+  #
+  # services.fprintd.enable = true;
+  # security.pam.services.login.fprintAuth = true;
+  # security.pam.services.xscreensaver.fprintAuth = true;
 
   fonts.fonts = [
     pkgs.dejavu_fonts
@@ -344,7 +379,12 @@
       enable = true;
     };
 
-    udev.packages = [ pkgs.yubikey-personalization ];
+    trezord.enable = true;
+
+    udev.packages = [
+      pkgs.trezor-udev-rules
+      pkgs.yubikey-personalization
+    ];
 
     # Udev rules.
     udev.extraRules = ''
@@ -362,6 +402,17 @@
 
 	      # for Yubico, from https://github.com/Yubico/libu2f-host/blob/master/70-u2f.rules
         ACTION=="add|change", ATTRS{idVendor}=="1050", ATTRS{idProduct}=="0113|0114|0115|0116|0120|0402|0403|0406|0407|0410", MODE="0666"
+
+
+        # replaced by trezor-udev-rules
+        # # For Trezor, see https://wiki.trezor.io/Udev_rules
+        # SUBSYSTEM=="usb", ATTR{idVendor}=="534c", ATTR{idProduct}=="0001", MODE="0660", GROUP="plugdev", TAG+="uaccess", TAG+="udev-acl", SYMLINK+="trezor%n"
+        # KERNEL=="hidraw*", ATTRS{idVendor}=="534c", ATTRS{idProduct}=="0001", MODE="0660", GROUP="plugdev", TAG+="uaccess", TAG+="udev-acl"
+        # # Trezor v2
+        # SUBSYSTEM=="usb", ATTR{idVendor}=="1209", ATTR{idProduct}=="53c0", MODE="0660", GROUP="plugdev", TAG+="uaccess", TAG+="udev-acl", SYMLINK+="trezor%n"
+        # SUBSYSTEM=="usb", ATTR{idVendor}=="1209", ATTR{idProduct}=="53c1", MODE="0660", GROUP="plugdev", TAG+="uaccess", TAG+="udev-acl", SYMLINK+="trezor%n"
+        # KERNEL=="hidraw*", ATTRS{idVendor}=="1209", ATTRS{idProduct}=="53c1", MODE="0660", GROUP="plugdev", TAG+="uaccess", TAG+="udev-acl"
+
     '';
 
     # For Thunar volume support.
@@ -407,6 +458,10 @@
   };
 
   users = {
+      groups = {
+        # plugdev = { };
+        trezord = { };
+      };
       extraUsers.yann= {
           isNormalUser = true;
           group = "yann";
@@ -416,11 +471,14 @@
                           "dialout"
                           "docker"
                           "lp"
+                          "libvirtd"
                           "networkmanager"
                           "scanner"
                           "video"
-			  "virtd"
+                          "virtd"
                           "wheel"
+                          "trezord"
+                          # "plugdev"
           ];
           uid = 1000;
           shell = "/run/current-system/sw/bin/zsh";
@@ -435,7 +493,7 @@
       extraGroups.vboxusers.members = [ "yann" ];
   };
 
-  # virtualisation.libvirtd.enable
+  virtualisation.libvirtd.enable = true;
   # virtualisation.virtualbox.host.enable = true;
 
   # Enable the docker daemon and map the container root user to yann:

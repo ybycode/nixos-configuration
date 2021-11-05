@@ -26,7 +26,9 @@
     # kernel v5:
     # boot.kernelPackages = pkgs.linuxPackages_4_19;
     kernelPackages = pkgs.linuxPackages_latest;
-    supportedFilesystems = [ "zfs" ];
+    supportedFilesystems = [
+      "zfs"
+    ];
   };
 
 
@@ -294,7 +296,7 @@
     bluetooth = {
       # https://nixos.wiki/wiki/Bluetooth
       enable = true;
-      config = {
+      settings = {
         General = {
           # Enabling A2DP Sink
           Enable = "Source,Sink,Media,Socket";
@@ -424,7 +426,9 @@
 
         libinput = {
           enable = true;
-          naturalScrolling = true;
+          touchpad = {
+            naturalScrolling = true;
+          };
         };
 
         desktopManager = {
@@ -449,9 +453,10 @@
         # https://github.com/kovidgoyal/kitty/issues/1681#issuecomment-683966060
         # https://wiki.archlinux.org/index.php/intel_graphics#DRI3_issues
         # https://bugs.chromium.org/p/chromium/issues/detail?id=370022
-        # deviceSection = ''
-        #   Option "DRI" "2"
-        # '';
+        deviceSection = ''
+          Driver "intel"
+          Option "DRI" "2"
+        '';
 
          # useGlamor = true;
     };
@@ -494,7 +499,7 @@
   };
 
   virtualisation.libvirtd.enable = true;
-  # virtualisation.virtualbox.host.enable = true;
+  virtualisation.virtualbox.host.enable = true;
 
   # Enable the docker daemon and map the container root user to yann:
   virtualisation.docker = {

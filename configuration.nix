@@ -156,7 +156,7 @@
     # security & encryption:
     croc # to securely share files (like magic-wormhole)
     cryptsetup
-    magic-wormhole # to securely share files (like croc)
+    wormhole-william # to securely share files (like croc)
     obexftp
     pass
     srm

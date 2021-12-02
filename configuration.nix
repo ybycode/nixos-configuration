@@ -35,6 +35,9 @@
   networking = {
     hostId = "72c5ac0c"; # for ZFS. Result of `head -c 8 /etc/machine-id`
     hostName = "x1carbon";
+    hosts = {
+      "127.0.0.1" = [ "dev.local" ];
+    };
     # wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
     nameservers = [ "1.1.1.1" "8.8.8.8" ];

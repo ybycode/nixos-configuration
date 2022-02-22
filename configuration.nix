@@ -26,9 +26,9 @@
     # kernel v5:
     # boot.kernelPackages = pkgs.linuxPackages_4_19;
     kernelPackages = pkgs.linuxPackages_latest;
-    supportedFilesystems = [
-      "zfs"
-    ];
+    # supportedFilesystems = [
+    #   "zfs"
+    # ];
   };
 
 
@@ -82,14 +82,11 @@
 
   # for zoom-us:
   nixpkgs.config.allowUnfree = true;
+  nixpkgs.config.input-fonts.acceptLicense = true;
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-    # fonts:
-    dejavu_fonts
-    inconsolata
-
     # linux tools:
     #avahi mod_dnssd
     #(pkgs.avahi.override { gtk=pkgs.gtk3; }) mod_dnssd
@@ -130,10 +127,12 @@
     zip
 
     # internet:
+    brave
     chromium
     filezilla
     firefox
     # thunderbird
+    signal-desktop
     transmission_gtk
     openvpn
 
@@ -151,6 +150,11 @@
     ngrok
     shellcheck
 
+    # rust programming:
+    cargo-edit
+    rustup
+    rust-analyzer
+
     python
 
     # purescript and its manager spago
@@ -159,11 +163,13 @@
     # security & encryption:
     croc # to securely share files (like magic-wormhole)
     cryptsetup
-    wormhole-william # to securely share files (like croc)
     obexftp
     pass
+    restic # encrypted backups
+    rage
+    sops
     srm
-    tomb
+    wormhole-william # to securely share files (like croc)
     yubikey-manager
     yubikey-personalization
     yubikey-personalization-gui
@@ -172,7 +178,7 @@
     # ops
     awscli
     aws-vault
-    terraform
+    terraform_0_12
 
     # virtualization
     # virtualbox
@@ -352,6 +358,8 @@
   fonts.fonts = [
     pkgs.dejavu_fonts
     pkgs.inconsolata
+    pkgs.nerdfonts
+    pkgs.input-fonts
   ];
 
   services = {
@@ -385,6 +393,7 @@
     };
 
     trezord.enable = true;
+    # is the trezord-go package needed?
 
     udev.packages = [
       pkgs.trezor-udev-rules

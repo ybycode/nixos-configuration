@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 {
   imports =
@@ -59,7 +59,7 @@
     };
 
     firewall = {
-      enable = true;
+      enable = false;
       # for wireguard:
       # allowedUDPPorts = [51820];
     };
@@ -98,6 +98,8 @@
     docker-compose
     docker-credential-helpers
     ffmpeg
+    fzf
+    ghostscript
     gparted
     htop
     imagemagick
@@ -106,6 +108,7 @@
     keychain
     kubectl
     lsof
+    moreutils # provides vidir, vipe, sponge etc. See https://joeyh.name/code/moreutils/
     neovim
     nload
     ntfs3g
@@ -114,6 +117,7 @@
     pciutils
     pv
     rsync
+    silver-searcher
     sshfsFuse
     tmux
     tree
@@ -128,27 +132,28 @@
 
     # internet:
     brave
-    chromium
+    # chromium
     filezilla
-    firefox
+    # firefox
     # thunderbird
     signal-desktop
+    tdesktop # telegram GUI
     transmission_gtk
     openvpn
 
     # development:
     arduino
-    ag
     elixir
     git
     go
     goimports
     neovim
-    nodejs-12_x
+    nodejs-16_x
     nodePackages.prettier
     nodePackages.yarn
     ngrok
     shellcheck
+    watchman # dependency for coc-volar (https://github.com/yaegassy/coc-volar#recommended-additional-installation-watchman)
 
     # rust programming:
     cargo-edit
@@ -156,6 +161,7 @@
     rust-analyzer
 
     python
+    python3Full
 
     # purescript and its manager spago
     purescript spago
@@ -198,6 +204,7 @@
     pavucontrol
     peek # animated GIF recorder
     pinentry
+    redshift
     rxvt_unicode-with-plugins
     unclutter
     urxvt_font_size
@@ -263,12 +270,29 @@
   # programs.mtr.enable = true;
   programs = {
     dconf.enable = true; # for libvirtd, see https://nixos.wiki/wiki/Virt-manager
-    ssh.startAgent = false;
+    firejail = {
+      enable = true;
+      wrappedBinaries = {
+        # brave = {
+        #   executable = "${lib.getBin pkgs.brave}/bin/brave";
+        #   profile = "${pkgs.firejail}/etc/firejail/brave.profile";
+        # };
+        chromium = {
+          executable = "${lib.getBin pkgs.chromium}/bin/chromium";
+          profile = "${pkgs.firejail}/etc/firejail/chromium.profile";
+        };
+        firefox = {
+          executable = "${lib.getBin pkgs.firefox}/bin/firefox";
+          profile = "${pkgs.firejail}/etc/firejail/firefox.profile";
+        };
+      };
+    };
     gnupg.agent = {
       enable = true;
       enableSSHSupport = true;
       pinentryFlavor = "gnome3";
     };
+    ssh.startAgent = false;
     zsh = {
       enable = true;
       interactiveShellInit = ''
@@ -362,6 +386,12 @@
     pkgs.input-fonts
   ];
 
+  location = {
+    # Berlin
+    latitude = 52.5;
+    longitude = 13.4;
+  };
+
   services = {
     avahi = {
       enable = true;
@@ -386,6 +416,15 @@
     printing = {
       enable = true;
       drivers = [ pkgs.epson-escpr ];
+    };
+
+    redshift = {
+      enable = true;
+      temperature = {
+        day = 5700;
+        night = 3700;
+      };
+      extraOptions = [ "-v" "-m randr" ];
     };
 
     tlp = {

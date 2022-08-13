@@ -118,7 +118,7 @@
     pv
     rsync
     silver-searcher
-    sshfsFuse
+    sshfs-fuse
     tmux
     tree
     unzip
@@ -138,7 +138,7 @@
     # thunderbird
     signal-desktop
     tdesktop # telegram GUI
-    transmission_gtk
+    transmission-gtk
     openvpn
 
     # development:
@@ -146,7 +146,7 @@
     elixir
     git
     go
-    goimports
+    gotools
     neovim
     nodejs-16_x
     nodePackages.prettier
@@ -184,7 +184,6 @@
     # ops
     awscli
     aws-vault
-    terraform_0_12
 
     # virtualization
     # virtualbox
@@ -199,7 +198,7 @@
     kitty # terminal
     lightdm
     networkmanager
-    networkmanager_openvpn
+    networkmanager-openvpn
     networkmanagerapplet
     pavucontrol
     peek # animated GIF recorder
@@ -217,20 +216,19 @@
     # XFCE:
     # xfce.libxfcegui4 # upgrade 20.03
     # xfce.gvfs
-    xfce.terminal
     xfce.thunar
-    xfce.thunar_volman
-    xfce.xfce4settings
-    xfce.xfconf
+    # xfce.thunar_volman
+    # xfce.xfce4settings
+    # xfce.xfconf
 
     # theme:
     #gnome.gnomeicontheme
     #gtk
     #oxygen-gtk2
     #oxygen-gtk3
-    hicolor_icon_theme
-    shared_mime_info
-    xfce.xfce4icontheme
+    hicolor-icon-theme
+    shared-mime-info
+    xfce.xfce4-icon-theme
 
     # X11 multimedia:
     evince

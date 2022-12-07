@@ -4,6 +4,12 @@
 
 { config, pkgs, lib, ... }:
 
+let
+  unstable = import
+    (builtins.fetchTarball https://github.com/nixos/nixpkgs/tarball/nixos-unstable)
+    # reuse the current configuration
+    { config = config.nixpkgs.config; };
+in
 {
   imports =
     [ # Include the results of the hardware scan.
@@ -40,7 +46,7 @@
     };
     # wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
-    nameservers = [ "1.1.1.1" "8.8.8.8" ];
+    # nameservers = [ "1.1.1.1" "8.8.8.8" ];
 
     # for KVM networking (from https://nixos.wiki/wiki/Using_bridges_under_NixOS)
     dhcpcd.denyInterfaces = [ "macvtap0@*" ];
@@ -169,6 +175,7 @@
     # security & encryption:
     croc # to securely share files (like magic-wormhole)
     cryptsetup
+    keepassxc
     obexftp
     pass
     restic # encrypted backups
@@ -186,9 +193,10 @@
     aws-vault
 
     # virtualization
+    qemu
     # virtualbox
     # vagrant
-    virt-manager
+    # virt-manager
 
     # for Desktop:
     arandr
@@ -250,6 +258,10 @@
     # for bluetooth
     # bluez
     # blueman
+
+
+
+    unstable.darktable
   ];
 
   fileSystems."/mnt/data" = {
@@ -318,6 +330,27 @@
 
   # Enable CUPS to print documents.
   # services.printing.enable = true;
+
+  services.syncthing = {
+    enable = true;
+    user = "yann";
+    dataDir = "/home/yann/syncthing";
+    configDir = "/home/yann/.config/syncthing";
+    overrideDevices = true;     # overrides any devices added or deleted through the WebUI
+    overrideFolders = true;     # overrides any folders added or deleted through the WebUI
+    devices = {
+      phone = {
+        id = "DMZPQOV-UCTLBFJ-WNLRFEE-UEROIYL-OEFZIJR-CDHWZQZ-GXHYE37-JCHW3AK";
+      };
+    };
+    folders = {
+      "/home/yann/kp" = {
+        id = "kp";
+        devices = [ "phone" ];
+        type = "sendreceive";
+      };
+    };
+  };
 
   # Enable sound.
   sound.enable = true;
@@ -417,7 +450,7 @@
     };
 
     redshift = {
-      enable = true;
+      enable = false;
       temperature = {
         day = 5700;
         night = 3700;
@@ -526,6 +559,7 @@
                           "docker"
                           "lp"
                           "libvirtd"
+                          "lxd"
                           "networkmanager"
                           "scanner"
                           "video"
@@ -536,10 +570,6 @@
           ];
           uid = 1000;
           shell = "/run/current-system/sw/bin/zsh";
-          # define uid and guid to use with docker user namespaces.
-          # apt uid is 65534 in containers. Thus the count > 65534
-          subUidRanges = [ { count = 1; startUid = 1000; } { count = 65536; startUid = 100001; } ];
-          subGidRanges = [ { count = 1; startGid = 1000; } { count = 65536; startGid = 100001; } ];
       };
 
       # create the group yann, gid 1000:
@@ -549,6 +579,13 @@
 
   virtualisation.libvirtd.enable = true;
   virtualisation.virtualbox.host.enable = true;
+  # lxc/lxd:
+  virtualisation.lxd.enable = true;
+  virtualisation.lxc = {
+    enable = true;
+    lxcfs.enable = true;
+    defaultConfig = "lxc.include = ${pkgs.lxcfs}/share/lxc/config/common.conf.d/00-lxcfs.conf";
+  };
 
   # Enable the docker daemon and map the container root user to yann:
   virtualisation.docker = {
@@ -558,6 +595,14 @@
       #   # --userns-remap=1000:1000
       # '';
   };
+
+  # virtualisation.podman = {
+  #     enable = true;
+  #     dockerCompat = true;
+  #     dockerSocket.enable = true;
+  #     networkSocket.enable = true;
+  #     networkSocket.openFirewall = true;
+  # };
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions

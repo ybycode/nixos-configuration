@@ -59,7 +59,7 @@ in
     interfaces.wlp0s20f3.useDHCP = true;
     networkmanager = {
       enable = true;
-      dns = "none"; # to use the nameservers defined statically above.
+      # dns = "none"; # to use the nameservers defined statically above.
       wifi.powersave = false;
       wifi.scanRandMacAddress = false;
     };
@@ -343,11 +343,14 @@ in
   # Enable CUPS to print documents.
   # services.printing.enable = true;
 
+  services.gvfs.enable = true;
+
   services.syncthing = {
     enable = true;
     user = "yann";
     dataDir = "/home/yann/syncthing";
     configDir = "/home/yann/.config/syncthing";
+    guiAddress = "127.0.0.1:8384";
     overrideDevices = true;     # overrides any devices added or deleted through the WebUI
     overrideFolders = true;     # overrides any folders added or deleted through the WebUI
     devices = {

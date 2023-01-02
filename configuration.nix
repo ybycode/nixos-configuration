@@ -65,9 +65,20 @@ in
     };
 
     firewall = {
-      enable = false;
-      # for wireguard:
-      # allowedUDPPorts = [51820];
+      enable = true;
+      allowedUDPPorts = [ 51820 ];
+      # Setup for allowing wireguard (from https://nixos.wiki/wiki/WireGuard):
+      # if packets are still dropped, they will show up in dmesg
+      logReversePathDrops = true;
+      # wireguard trips rpfilter up
+      extraCommands = ''
+        iptables -t raw -I nixos-fw-rpfilter -p udp -m udp --sport 51820 -j RETURN
+        iptables -t raw -I nixos-fw-rpfilter -p udp -m udp --dport 51820 -j RETURN
+      '';
+      extraStopCommands = ''
+        iptables -t raw -D nixos-fw-rpfilter -p udp -m udp --sport 51820 -j RETURN || true
+        iptables -t raw -D nixos-fw-rpfilter -p udp -m udp --dport 51820 -j RETURN || true
+      '';
     };
   };
 
@@ -146,6 +157,7 @@ in
     tdesktop # telegram GUI
     transmission-gtk
     openvpn
+    wireguard-tools
 
     # development:
     arduino

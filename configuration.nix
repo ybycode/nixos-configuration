@@ -31,25 +31,19 @@ in
     # because the intel video driver is not happy with the
     # kernel v5:
     # boot.kernelPackages = pkgs.linuxPackages_4_19;
+    # TODO: sound stops working after the first playback with default
+    # kernel. So using the latest for now.
     kernelPackages = pkgs.linuxPackages_latest;
-    # supportedFilesystems = [
-    #   "zfs"
-    # ];
   };
 
 
   networking = {
-    hostId = "72c5ac0c"; # for ZFS. Result of `head -c 8 /etc/machine-id`
     hostName = "x1carbon";
     hosts = {
       "127.0.0.1" = [ "dev.local" ];
     };
-    # wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
     # nameservers = [ "1.1.1.1" "8.8.8.8" ];
-
-    # for KVM networking (from https://nixos.wiki/wiki/Using_bridges_under_NixOS)
-    dhcpcd.denyInterfaces = [ "macvtap0@*" ];
 
     # The global useDHCP flag is deprecated, therefore explicitly set to false here.
     # Per-interface useDHCP will be mandatory in the future, so this generated config
@@ -66,34 +60,29 @@ in
 
     firewall = {
       enable = true;
-      allowedUDPPorts = [ 51820 ];
+      allowedTCPPorts = [ ];
+      allowedUDPPorts = [ 51820 ]; # wireguard
       # Setup for allowing wireguard (from https://nixos.wiki/wiki/WireGuard):
       # if packets are still dropped, they will show up in dmesg
       logReversePathDrops = true;
       # wireguard trips rpfilter up
       extraCommands = ''
-        iptables -t raw -I nixos-fw-rpfilter -p udp -m udp --sport 51820 -j RETURN
-        iptables -t raw -I nixos-fw-rpfilter -p udp -m udp --dport 51820 -j RETURN
+        iptables -t mangle -I nixos-fw-rpfilter -p udp -m udp --sport 51820 -j RETURN
+        iptables -t mangle -I nixos-fw-rpfilter -p udp -m udp --dport 51820 -j RETURN
       '';
       extraStopCommands = ''
-        iptables -t raw -D nixos-fw-rpfilter -p udp -m udp --sport 51820 -j RETURN || true
-        iptables -t raw -D nixos-fw-rpfilter -p udp -m udp --dport 51820 -j RETURN || true
+        iptables -t mangle -D nixos-fw-rpfilter -p udp -m udp --sport 51820 -j RETURN || true
+        iptables -t mangle -D nixos-fw-rpfilter -p udp -m udp --dport 51820 -j RETURN || true
       '';
     };
   };
 
-  # Configure network proxy if necessary
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
-
-  # Select internationalisation properties.
   i18n.defaultLocale = "en_US.UTF-8";
   console = {
     font = "Lat2-Terminus16";
     keyMap = "fr";
   };
 
-  # Set your time zone.
   # time.timeZone = "Atlantic/Canary";
   time.timeZone = "Europe/Berlin";
 
@@ -101,12 +90,8 @@ in
   nixpkgs.config.allowUnfree = true;
   nixpkgs.config.input-fonts.acceptLicense = true;
 
-  # List packages installed in system profile. To search, run:
-  # $ nix search wget
   environment.systemPackages = with pkgs; [
     # linux tools:
-    #avahi mod_dnssd
-    #(pkgs.avahi.override { gtk=pkgs.gtk3; }) mod_dnssd
     baobab
     cifs-utils
     direnv
@@ -129,7 +114,6 @@ in
     neovim
     nload
     ntfs3g
-    oh-my-zsh
     p7zip
     pciutils
     pv
@@ -157,7 +141,7 @@ in
     tdesktop # telegram GUI
     transmission-gtk
     openvpn
-    wireguard-tools
+    wireguard-tools # to create wireguard keys
 
     # development:
     arduino
@@ -184,16 +168,21 @@ in
     # purescript and its manager spago
     purescript spago
 
+    # Deno from unstable to get at least version 1.29
+    unstable.deno
+
     # security & encryption:
+    age-plugin-yubikey
     croc # to securely share files (like magic-wormhole)
     cryptsetup
-    keepassxc
     obexftp
     pass
     restic # encrypted backups
     rage
     sops
+    step-cli
     srm
+    tomb # to create hidden encrypted directories
     wormhole-william # to securely share files (like croc)
     yubikey-manager
     yubikey-personalization
@@ -203,12 +192,6 @@ in
     # ops
     awscli
     aws-vault
-
-    # virtualization
-    qemu
-    # virtualbox
-    # vagrant
-    # virt-manager
 
     # for Desktop:
     arandr
@@ -222,7 +205,7 @@ in
     networkmanagerapplet
     pavucontrol
     peek # animated GIF recorder
-    pinentry
+    polybarFull
     redshift
     rxvt_unicode-with-plugins
     unclutter
@@ -231,7 +214,6 @@ in
     xorg.xbacklight
     xorg.xkill
     xorg.xmodmap
-    zathura
 
     # XFCE:
     # xfce.libxfcegui4 # upgrade 20.03
@@ -263,16 +245,6 @@ in
     # sad
     zoom-us
 
-    # scan
-    # xsane
-    # simple-scan
-
-    # for bluetooth
-    # bluez
-    # blueman
-
-
-
     unstable.darktable
   ];
 
@@ -295,10 +267,10 @@ in
     firejail = {
       enable = true;
       wrappedBinaries = {
-        # brave = {
-        #   executable = "${lib.getBin pkgs.brave}/bin/brave";
-        #   profile = "${pkgs.firejail}/etc/firejail/brave.profile";
-        # };
+        brave = {
+          executable = "${lib.getBin pkgs.brave}/bin/brave";
+          profile = "${pkgs.firejail}/etc/firejail/brave.profile";
+        };
         chromium = {
           executable = "${lib.getBin pkgs.chromium}/bin/chromium";
           profile = "${pkgs.firejail}/etc/firejail/chromium.profile";
@@ -317,12 +289,11 @@ in
     ssh.startAgent = false;
     zsh = {
       enable = true;
-      interactiveShellInit = ''
-        export ZSH=${pkgs.oh-my-zsh}/share/oh-my-zsh/
-        ZSH_THEME="avit"
-        plugins=(git)
-        source $ZSH/oh-my-zsh.sh
-      '';
+      ohMyZsh = {
+        enable = true;
+        theme = "avit";
+        plugins = [ "git" "pass" "last-working-dir" ];
+      };
     };
 
     # android dev:
@@ -340,10 +311,25 @@ in
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
 
-  # Enable CUPS to print documents.
-  # services.printing.enable = true;
+  # No CUPS
+  services.printing.enable = false;
 
   services.gvfs.enable = true;
+
+  # kill apps that are taking too much RAM
+  services.earlyoom = {
+    enable = true;
+    freeSwapThreshold = 2;
+    freeMemThreshold = 2;
+    killHook = pkgs.writeShellScript "earlyoom-kill-hook" ''
+      echo "$(date +%F-%Hh%M) Process $EARLYOOM_NAME ($EARLYOOM_PID) was killed" >> /var/log/earlyoom.log
+    '';
+    # extraArgs = [
+    #   "-g"
+    #   "--avoid '^(X|plasma.*|konsole|kwin)$'"
+    #   "--prefer '^(electron|libreoffice|gimp)$'"
+    # ];
+  };
 
   services.syncthing = {
     enable = true;
@@ -355,17 +341,32 @@ in
     overrideFolders = true;     # overrides any folders added or deleted through the WebUI
     devices = {
       phone = {
-        id = "DMZPQOV-UCTLBFJ-WNLRFEE-UEROIYL-OEFZIJR-CDHWZQZ-GXHYE37-JCHW3AK";
+        id = lib.strings.fileContents ./syncthing/phone.id;
+      };
+      nas = {
+        id = lib.strings.fileContents ./syncthing/nas.id;
       };
     };
     folders = {
       "/home/yann/kp" = {
         id = "kp";
-        devices = [ "phone" ];
+        devices = [ "phone" "nas" ];
+        type = "sendreceive";
+      };
+      "/home/yann/markdown" = {
+        id = "markdown";
+        devices = [ "nas" ];
+        type = "sendonly";
+      };
+      "/mnt/data/documents" = {
+        id = "documents";
+        devices = [ "nas" ];
         type = "sendreceive";
       };
     };
   };
+
+  services.yubikey-agent.enable = true;
 
   # Enable sound.
   sound.enable = true;
@@ -388,18 +389,7 @@ in
       enable = true;
       package = pkgs.pulseaudioFull; # for bluetooth support
       support32Bit = true;
-
-      # keyboard mute & mic LED do not follow the pulseaudio settings. Problem
-      # of config to map source and sinks? This following config didn't fix
-      # anything:
-      # See
-      # https://wiki.archlinux.org/index.php/Lenovo_ThinkPad_X1_Carbon_(Gen_7)#Audio
-      # extraConfig = ''
-      #   load-module module-alsa-sink   device=hw:0,0 channels=4
-      #   load-module module-alsa-source device=hw:0,6 channels=4
-      # '';
     };
-    # sane.enable = true;
 
     enableRedistributableFirmware = true;
   };
@@ -415,11 +405,6 @@ in
   # ```
   # $ fprintd-enroll
   # ```
-  # TODO As of 29/12/2020 and fprint v1.90: fprintd-enroll by doesn't require a
-  # password to add a new print, and so is a security issue.
-  # The issue seems to have been fixed in fprintd v1.90.7-1, but not yet
-  # available in nixos (see
-  # https://bugs.launchpad.net/ubuntu/+source/fprintd/+bug/1532264).
   #
   # services.fprintd.enable = true;
   # security.pam.services.login.fprintAuth = true;
@@ -428,7 +413,8 @@ in
   fonts.fonts = [
     pkgs.dejavu_fonts
     pkgs.inconsolata
-    pkgs.nerdfonts
+    # pkgs.nerdfonts
+    pkgs.ubuntu_font_family
     pkgs.input-fonts
   ];
 
@@ -439,11 +425,6 @@ in
   };
 
   services = {
-    avahi = {
-      enable = true;
-	    nssmdns = true;
-    };
-
     blueman.enable = true;
 
     openssh = {
@@ -452,17 +433,8 @@ in
       permitRootLogin = "no";
     };
 
-    # to fix the error described in https://github.com/NixOS/nixpkgs/issues/16327
-    # that I was having when trying to save scanned images with xsane or simple-scan:
-    # gnome3.at-spi2-core.enable = true; # TODO: still needed??
-
     # Needed for yubikey (see https://nixos.wiki/wiki/Yubikey):
     pcscd.enable = true;
-
-    printing = {
-      enable = true;
-      drivers = [ pkgs.epson-escpr ];
-    };
 
     redshift = {
       enable = false;
@@ -584,40 +556,24 @@ in
                           # "plugdev"
           ];
           uid = 1000;
-          shell = "/run/current-system/sw/bin/zsh";
+          # shell = "/run/current-system/sw/bin/zsh";
+          shell = pkgs.zsh;
+          # shell = pkgs.bashInteractive;
       };
 
       # create the group yann, gid 1000:
       extraGroups.yann.gid = 1000;
-      extraGroups.vboxusers.members = [ "yann" ];
   };
 
-  virtualisation.libvirtd.enable = true;
-  virtualisation.virtualbox.host.enable = true;
-  # lxc/lxd:
-  virtualisation.lxd.enable = true;
-  virtualisation.lxc = {
-    enable = true;
-    lxcfs.enable = true;
-    defaultConfig = "lxc.include = ${pkgs.lxcfs}/share/lxc/config/common.conf.d/00-lxcfs.conf";
-  };
+  security.pki.certificateFiles = [ "/var/lib/step-ca/root_ca.crt" ];
+
+  # virtualisation.libvirtd.enable = true;
 
   # Enable the docker daemon and map the container root user to yann:
   virtualisation.docker = {
       enable = true;
       enableOnBoot = true;
-      # extraOptions = '';
-      #   # --userns-remap=1000:1000
-      # '';
   };
-
-  # virtualisation.podman = {
-  #     enable = true;
-  #     dockerCompat = true;
-  #     dockerSocket.enable = true;
-  #     networkSocket.enable = true;
-  #     networkSocket.openFirewall = true;
-  # };
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
@@ -626,6 +582,5 @@ in
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "20.03"; # Did you read the comment?
-
 }
 

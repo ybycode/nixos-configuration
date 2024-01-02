@@ -179,8 +179,8 @@ in
     cargo-edit
     rustup
 
-    # purescript and its manager spago
-    purescript spago
+    # # purescript and its manager spago
+    # purescript spago
 
     # security & encryption:
     age-plugin-yubikey
@@ -211,7 +211,6 @@ in
     i3status
     kitty # terminal
     lightdm
-    nerdfonts
     networkmanager
     networkmanager-openvpn
     networkmanagerapplet
@@ -350,29 +349,31 @@ in
     guiAddress = "127.0.0.1:8384";
     overrideDevices = true;     # overrides any devices added or deleted through the WebUI
     overrideFolders = true;     # overrides any folders added or deleted through the WebUI
-    devices = {
-      phone = {
-        id = "DMZPQOV-UCTLBFJ-WNLRFEE-UEROIYL-OEFZIJR-CDHWZQZ-GXHYE37-JCHW3AK";
+    settings = {
+      devices = {
+        phone = {
+          id = "DMZPQOV-UCTLBFJ-WNLRFEE-UEROIYL-OEFZIJR-CDHWZQZ-GXHYE37-JCHW3AK";
+        };
+        nas = {
+          id = "JWKY5WG-DIXQRDM-Z5EQSKU-6WUSOJ2-HFTEFLP-3DYEGWZ-IHNZEKZ-VHYV4QY";
+        };
       };
-      nas = {
-        id = "JWKY5WG-DIXQRDM-Z5EQSKU-6WUSOJ2-HFTEFLP-3DYEGWZ-IHNZEKZ-VHYV4QY";
-      };
-    };
-    folders = {
-      "/home/yann/kp" = {
-        id = "kp";
-        devices = [ "phone" "nas" ];
-        type = "sendreceive";
-      };
-      "/home/yann/markdown" = {
-        id = "markdown";
-        devices = [ "nas" ];
-        type = "sendreceive";
-      };
-      "/home/yann/documents" = {
-        id = "documents";
-        devices = [ "nas" ];
-        type = "sendreceive";
+      folders = {
+        "/home/yann/kp" = {
+          id = "kp";
+          devices = [ "phone" "nas" ];
+          type = "sendreceive";
+        };
+        "/home/yann/markdown" = {
+          id = "markdown";
+          devices = [ "nas" ];
+          type = "sendreceive";
+        };
+        "/home/yann/documents" = {
+          id = "documents";
+          devices = [ "nas" ];
+          type = "sendreceive";
+        };
       };
     };
   };
@@ -456,11 +457,10 @@ in
   # security.pam.services.login.fprintAuth = true;
   # security.pam.services.xscreensaver.fprintAuth = true;
 
-  fonts.fonts = [
+  fonts.packages = with pkgs; [
     pkgs.dejavu_fonts
     pkgs.inconsolata
-    # TODO
-    # pkgs.nerdfonts
+    pkgs.nerdfonts
     pkgs.input-fonts
   ];
 
@@ -480,8 +480,10 @@ in
 
     openssh = {
       enable = true;
-	    passwordAuthentication = false;
-      permitRootLogin = "no";
+      settings = {
+        PasswordAuthentication = false;
+        PermitRootLogin = "no";
+      };
     };
 
     # Needed for yubikey (see https://nixos.wiki/wiki/Yubikey):
@@ -594,6 +596,7 @@ in
                           "audio"
                           "cdrom"
                           "dialout"
+                          "kvm" # for firecracker micro VMs
                           "lp"
                           "libvirtd"
                           "lxd"

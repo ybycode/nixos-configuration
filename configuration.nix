@@ -31,12 +31,7 @@ in
     # Use the systemd-boot EFI boot loader.
     loader.systemd-boot.enable = true;
     loader.efi.canTouchEfiVariables = true;
-    # because the intel video driver is not happy with the
-    # kernel v5:
-    # boot.kernelPackages = pkgs.linuxPackages_4_19;
-    # TODO: sound stops working after the first playback with default
-    # kernel. So using the latest for now.
-    kernelPackages = pkgs.linuxPackages_latest;
+    # kernelPackages = pkgs.linuxPackages_latest;
 
 
     initrd.availableKernelModules = [

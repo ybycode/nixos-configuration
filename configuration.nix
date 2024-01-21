@@ -206,6 +206,7 @@ in
     i3status
     kitty # terminal
     lightdm
+    logseq
     networkmanager
     networkmanager-openvpn
     networkmanagerapplet
@@ -367,6 +368,11 @@ in
         "/home/yann/documents" = {
           id = "documents";
           devices = [ "nas" ];
+          type = "sendreceive";
+        };
+        "/home/yann/knowledge_db" = {
+          id = "knowledge_db";
+          devices = [ "nas" "phone" ];
           type = "sendreceive";
         };
       };

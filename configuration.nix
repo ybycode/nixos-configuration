@@ -101,6 +101,7 @@ in
     docker-credential-helpers
     ffmpeg
     fzf
+    gcc
     ghostscript
     gparted
     htop
@@ -117,6 +118,7 @@ in
     p7zip
     pciutils
     pv
+    ripgrep
     rsync
     silver-searcher
     sshfs-fuse
@@ -136,6 +138,7 @@ in
     # chromium
     filezilla
     # firefox
+    librewolf # based on firefox, privacy focused
     # thunderbird
     signal-desktop
     tdesktop # telegram GUI
@@ -144,45 +147,40 @@ in
     wireguard-tools # to create wireguard keys
 
     # development:
-    arduino
+    # arduino
     elixir
+    elixir-ls
     git
-    go
-    gotools
+    # go
+    # gotools
     neovim
-    nodejs-16_x
-    nodePackages.prettier
-    nodePackages.yarn
+    # nodejs-16_x
+    # nodePackages.prettier
+    nodePackages.typescript-language-server
+    yarn
     ngrok
     shellcheck
-    watchman # dependency for coc-volar (https://github.com/yaegassy/coc-volar#recommended-additional-installation-watchman)
+    typescript
 
     # rust programming:
     cargo-edit
     rustup
     rust-analyzer
 
-    python
-    python3Full
-
-    # purescript and its manager spago
-    purescript spago
-
-    # Deno from unstable to get at least version 1.29
-    unstable.deno
+    python3Minimal
 
     # security & encryption:
     age-plugin-yubikey
     croc # to securely share files (like magic-wormhole)
     cryptsetup
-    obexftp
+    # obexftp
     pass
     restic # encrypted backups
     rage
     sops
-    step-cli
+    # step-cli
     srm
-    tomb # to create hidden encrypted directories
+    # tomb # to create hidden encrypted directories
     wormhole-william # to securely share files (like croc)
     yubikey-manager
     yubikey-personalization
@@ -200,6 +198,7 @@ in
     i3status
     kitty # terminal
     lightdm
+    logseq # notes taking app
     networkmanager
     networkmanager-openvpn
     networkmanagerapplet
@@ -236,7 +235,7 @@ in
     evince
     gimp
     gnome3.eog
-    libreoffice
+    # libreoffice
     mplayer
     smplayer
     udiskie # to automount USB devices
@@ -245,7 +244,7 @@ in
     # sad
     zoom-us
 
-    unstable.darktable
+    # unstable.darktable
   ];
 
   fileSystems."/mnt/data" = {
@@ -267,10 +266,10 @@ in
     firejail = {
       enable = true;
       wrappedBinaries = {
-        brave = {
-          executable = "${lib.getBin pkgs.brave}/bin/brave";
-          profile = "${pkgs.firejail}/etc/firejail/brave.profile";
-        };
+        # brave = {
+        #   executable = "${lib.getBin pkgs.brave}/bin/brave";
+        #   profile = "${pkgs.firejail}/etc/firejail/brave.profile";
+        # };
         chromium = {
           executable = "${lib.getBin pkgs.chromium}/bin/chromium";
           profile = "${pkgs.firejail}/etc/firejail/chromium.profile";
@@ -363,6 +362,11 @@ in
         devices = [ "nas" ];
         type = "sendreceive";
       };
+      "/mnt/data/knowledge_db" = {
+        id = "knowledge_db";
+        devices = [ "nas" "phone" ];
+        type = "sendreceive";
+      };
     };
   };
 
@@ -412,8 +416,8 @@ in
 
   fonts.fonts = [
     pkgs.dejavu_fonts
-    pkgs.inconsolata
-    # pkgs.nerdfonts
+    # pkgs.inconsolata
+    pkgs.nerdfonts
     pkgs.ubuntu_font_family
     pkgs.input-fonts
   ];
@@ -428,9 +432,11 @@ in
     blueman.enable = true;
 
     openssh = {
-      enable = true;
-	    passwordAuthentication = false;
-      permitRootLogin = "no";
+      enable = false;
+      settings = {
+        PasswordAuthentication = false;
+        PermitRootLogin = "no";
+      };
     };
 
     # Needed for yubikey (see https://nixos.wiki/wiki/Yubikey):
@@ -448,9 +454,6 @@ in
     tlp = {
       enable = true;
     };
-
-    trezord.enable = true;
-    # is the trezord-go package needed?
 
     udev.packages = [
       pkgs.trezor-udev-rules
@@ -543,7 +546,6 @@ in
                           "audio"
                           "cdrom"
                           "dialout"
-                          "docker"
                           "lp"
                           "libvirtd"
                           "lxd"
@@ -569,10 +571,14 @@ in
 
   # virtualisation.libvirtd.enable = true;
 
-  # Enable the docker daemon and map the container root user to yann:
+  # Enable docker, with rootless mode:
   virtualisation.docker = {
       enable = true;
       enableOnBoot = true;
+      rootless = {
+          enable = true;
+          setSocketVariable = true;
+      };
   };
 
   # This value determines the NixOS release from which the default

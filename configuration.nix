@@ -23,7 +23,19 @@ in
       <nixos-hardware/lenovo/thinkpad>
       <nixos-hardware/lenovo/thinkpad/x1>
       <nixos-hardware/lenovo/thinkpad/x1/7th-gen>
+
+      "${(import ./nix/sources.nix).sops-nix}/modules/sops"
     ];
+
+  sops = {
+    defaultSopsFile = ./secrets/example.yaml;
+    age.keyFile = "/etc/nixos/some-age-key";
+    # This is the actual specification of the secrets.
+    secrets = {
+      example-key = {};
+      "myservice/my_subdir/my_secret" = {};
+    };
+  };
 
   boot = {
     # Use the systemd-boot EFI boot loader.
@@ -92,6 +104,8 @@ in
   nixpkgs.config.input-fonts.acceptLicense = true;
 
   environment.systemPackages = with pkgs; [
+    niv
+
     # linux tools:
     baobab
     cifs-utils

@@ -18,7 +18,8 @@ in
       # https://github.com/NixOS/nixos-hardware:
       # initially found on
       # https://github.com/srid/nix-config/blob/master/configuration.nix/x1c7.nix
-      <nixos-hardware/common/cpu/intel/kaby-lake>
+      <nixos-hardware/common/cpu/intel>
+      <nixos-hardware/common/gpu/intel/kaby-lake>
       <nixos-hardware/lenovo/thinkpad>
       <nixos-hardware/lenovo/thinkpad/x1>
       <nixos-hardware/lenovo/thinkpad/x1/7th-gen>
@@ -117,6 +118,7 @@ in
     ntfs3g
     p7zip
     pciutils
+    podman # just as software, until a full switch to it some coming day
     pv
     ripgrep
     rsync
@@ -135,9 +137,9 @@ in
 
     # internet:
     brave
-    # chromium
+    chromium
     filezilla
-    # firefox
+    firefox
     librewolf # based on firefox, privacy focused
     # thunderbird
     signal-desktop
@@ -178,7 +180,6 @@ in
     restic # encrypted backups
     rage
     sops
-    # step-cli
     srm
     # tomb # to create hidden encrypted directories
     wormhole-william # to securely share files (like croc)
@@ -194,6 +195,7 @@ in
     # for Desktop:
     arandr
     dmenu
+    guvcview # webcam settings (incl. zooming and panning)
     i3lock
     i3status
     kitty # terminal
@@ -283,8 +285,9 @@ in
     gnupg.agent = {
       enable = true;
       enableSSHSupport = true;
-      pinentryFlavor = "gnome3";
+      pinentryPackage = pkgs.pinentry-gnome3;
     };
+
     ssh.startAgent = false;
     zsh = {
       enable = true;
@@ -309,6 +312,23 @@ in
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
+
+  services.displayManager = {
+    defaultSession = "none+i3";
+  };
+
+
+  services.libinput = {
+    enable = true;
+    touchpad = {
+      naturalScrolling = true;
+    };
+  };
+
+  services.avahi = {
+    enable = true;
+    nssmdns4 = true;
+  };
 
   # No CUPS
   services.printing.enable = false;
@@ -338,34 +358,36 @@ in
     guiAddress = "127.0.0.1:8384";
     overrideDevices = true;     # overrides any devices added or deleted through the WebUI
     overrideFolders = true;     # overrides any folders added or deleted through the WebUI
-    devices = {
-      phone = {
-        id = lib.strings.fileContents ./syncthing/phone.id;
+    settings = {
+      devices = {
+        phone = {
+          id = lib.strings.fileContents ./syncthing/phone.id;
+        };
+        nas = {
+          id = lib.strings.fileContents ./syncthing/nas.id;
+        };
       };
-      nas = {
-        id = lib.strings.fileContents ./syncthing/nas.id;
-      };
-    };
-    folders = {
-      "/home/yann/kp" = {
-        id = "kp";
-        devices = [ "phone" "nas" ];
-        type = "sendreceive";
-      };
-      "/home/yann/markdown" = {
-        id = "markdown";
-        devices = [ "nas" ];
-        type = "sendonly";
-      };
-      "/mnt/data/documents" = {
-        id = "documents";
-        devices = [ "nas" ];
-        type = "sendreceive";
-      };
-      "/mnt/data/knowledge_db" = {
-        id = "knowledge_db";
-        devices = [ "nas" "phone" ];
-        type = "sendreceive";
+      folders = {
+        "/home/yann/kp" = {
+          id = "kp";
+          devices = [ "phone" "nas" ];
+          type = "sendreceive";
+        };
+        "/home/yann/markdown" = {
+          id = "markdown";
+          devices = [ "nas" ];
+          type = "sendonly";
+        };
+        "/mnt/data/documents" = {
+          id = "documents";
+          devices = [ "nas" ];
+          type = "sendreceive";
+        };
+        "/mnt/data/knowledge_db" = {
+          id = "knowledge_db";
+          devices = [ "nas" "phone" ];
+          type = "sendreceive";
+        };
       };
     };
   };
@@ -414,10 +436,10 @@ in
   # security.pam.services.login.fprintAuth = true;
   # security.pam.services.xscreensaver.fprintAuth = true;
 
-  fonts.fonts = [
+  fonts.packages = [
     pkgs.dejavu_fonts
     # pkgs.inconsolata
-    pkgs.nerdfonts
+    pkgs.nerdfonts # used by neovim
     pkgs.ubuntu_font_family
     pkgs.input-fonts
   ];
@@ -496,26 +518,20 @@ in
     xserver = {
         enable = true;
 
-        libinput = {
-          enable = true;
-          touchpad = {
-            naturalScrolling = true;
-          };
-        };
-
         desktopManager = {
           # default = "none";
           xterm.enable = false;
         };
 
-        layout = "fr";
-        xkbOptions = "eurosign:e";
+        xkb = {
+          options = "eurosign:e";
+          layout = "fr";
+        };
 
         windowManager.i3.enable = true;
 
         displayManager = {
           lightdm.enable = true;
-          defaultSession = "none+i3";
         };
 
         videoDrivers = [ "intel" ];
@@ -566,8 +582,6 @@ in
       # create the group yann, gid 1000:
       extraGroups.yann.gid = 1000;
   };
-
-  security.pki.certificateFiles = [ "/var/lib/step-ca/root_ca.crt" ];
 
   # virtualisation.libvirtd.enable = true;
 

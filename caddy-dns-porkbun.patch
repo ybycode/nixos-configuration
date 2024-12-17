@@ -1,0 +1,13 @@
+diff --git a/cmd/caddy/main.go b/cmd/caddy/main.go
+index f1aeda0a..48bcc896 100644
+--- a/cmd/caddy/main.go
++++ b/cmd/caddy/main.go
+@@ -38,6 +38,7 @@ import (
+
+ 	// plug in Caddy modules here
+ 	_ "github.com/caddyserver/caddy/v2/modules/standard"
++	_ "github.com/caddy-dns/porkbun"
+ )
+
+ func main() {
+

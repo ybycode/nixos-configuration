@@ -44,7 +44,7 @@ in
       "127.0.0.1" = [ "dev.local" ];
     };
 
-    # nameservers = [ "1.1.1.1" "8.8.8.8" ];
+    nameservers = [ "1.1.1.1" "8.8.8.8" ];
 
     # The global useDHCP flag is deprecated, therefore explicitly set to false here.
     # Per-interface useDHCP will be mandatory in the future, so this generated config
@@ -62,19 +62,7 @@ in
     firewall = {
       enable = true;
       allowedTCPPorts = [ ];
-      allowedUDPPorts = [ 51820 ]; # wireguard
-      # Setup for allowing wireguard (from https://nixos.wiki/wiki/WireGuard):
-      # if packets are still dropped, they will show up in dmesg
-      logReversePathDrops = true;
-      # wireguard trips rpfilter up
-      extraCommands = ''
-        iptables -t mangle -I nixos-fw-rpfilter -p udp -m udp --sport 51820 -j RETURN
-        iptables -t mangle -I nixos-fw-rpfilter -p udp -m udp --dport 51820 -j RETURN
-      '';
-      extraStopCommands = ''
-        iptables -t mangle -D nixos-fw-rpfilter -p udp -m udp --sport 51820 -j RETURN || true
-        iptables -t mangle -D nixos-fw-rpfilter -p udp -m udp --dport 51820 -j RETURN || true
-      '';
+      allowedUDPPorts = [ ];
     };
   };
 
@@ -105,6 +93,7 @@ in
     gcc
     ghostscript
     gparted
+    btop
     htop
     imagemagick
     inetutils
@@ -189,7 +178,7 @@ in
     # tor-browser-bundle-bin
 
     # ops
-    awscli
+    awscli2
     aws-vault
 
     # for Desktop:
@@ -200,7 +189,7 @@ in
     i3status
     kitty # terminal
     lightdm
-    logseq # notes taking app
+    # logseq # notes taking app
     networkmanager
     networkmanager-openvpn
     networkmanagerapplet
@@ -219,8 +208,6 @@ in
     # XFCE:
     # xfce.libxfcegui4 # upgrade 20.03
     # xfce.gvfs
-    xfce.thunar
-    # xfce.thunar_volman
     # xfce.xfce4settings
     # xfce.xfconf
 
@@ -298,6 +285,15 @@ in
       };
     };
 
+    thunar = {
+      enable = true;
+      plugins = with pkgs.xfce; [ thunar-archive-plugin thunar-volman ];
+    };
+
+    kdeconnect = {
+      enable = true;
+    };
+
     # android dev:
     adb.enable = true;
   };
@@ -317,6 +313,10 @@ in
     defaultSession = "none+i3";
   };
 
+  services.tailscale = {
+    enable = true;
+    useRoutingFeatures = "client";
+  };
 
   services.libinput = {
     enable = true;
@@ -366,26 +366,34 @@ in
         nas = {
           id = lib.strings.fileContents ./syncthing/nas.id;
         };
+        groundstation = {
+          id = lib.strings.fileContents ./syncthing/groundstation.id;
+        };
       };
       folders = {
         "/home/yann/kp" = {
           id = "kp";
-          devices = [ "phone" "nas" ];
+          devices = [ "phone" "nas" "groundstation" ];
           type = "sendreceive";
         };
         "/home/yann/markdown" = {
           id = "markdown";
-          devices = [ "nas" ];
+          devices = [ "nas" "groundstation" ];
           type = "sendonly";
+        };
+        "/mnt/data/books" = {
+          id = "books";
+          devices = [ "nas" "groundstation" ];
+          type = "sendreceive";
         };
         "/mnt/data/documents" = {
           id = "documents";
-          devices = [ "nas" ];
+          devices = [ "nas" "groundstation" ];
           type = "sendreceive";
         };
         "/mnt/data/knowledge_db" = {
           id = "knowledge_db";
-          devices = [ "nas" "phone" ];
+          devices = [ "nas" "phone" "groundstation" ];
           type = "sendreceive";
         };
       };
@@ -438,8 +446,9 @@ in
 
   fonts.packages = [
     pkgs.dejavu_fonts
-    # pkgs.inconsolata
-    pkgs.nerdfonts # used by neovim
+    pkgs.inconsolata
+    (pkgs.nerdfonts.override {fonts = ["NerdFontsSymbolsOnly"];})
+    # pkgs.nerdfonts # used by neovim
     pkgs.ubuntu_font_family
     pkgs.input-fonts
   ];
@@ -562,6 +571,7 @@ in
                           "audio"
                           "cdrom"
                           "dialout"
+                          "disk"
                           "lp"
                           "libvirtd"
                           "lxd"

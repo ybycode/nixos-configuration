@@ -80,6 +80,11 @@ in
   nixpkgs.config.input-fonts.acceptLicense = true;
 
   environment.systemPackages = with pkgs; [
+    qemu_kvm
+
+
+    element-desktop
+
     # linux tools:
     baobab
     cifs-utils
@@ -142,6 +147,7 @@ in
     elixir
     elixir-ls
     git
+    k3s kubernetes-helm
     # go
     # gotools
     neovim
@@ -564,7 +570,8 @@ in
         # plugdev = { };
         trezord = { };
       };
-      extraUsers.yann= {
+      users = {
+        yann = {
           isNormalUser = true;
           group = "yann";
           extraGroups = [ "adbusers"
@@ -587,6 +594,7 @@ in
           # shell = "/run/current-system/sw/bin/zsh";
           shell = pkgs.zsh;
           # shell = pkgs.bashInteractive;
+        };
       };
 
       # create the group yann, gid 1000:
